@@ -1,7 +1,7 @@
 from _typeshed import Incomplete, SupportsItems, SupportsRead, Unused
 from collections.abc import Callable, Iterable, Mapping, MutableMapping
 from typing import Any
-from typing_extensions import Self, TypeAlias, TypedDict
+from typing_extensions import Self, TypeAlias, TypedDict, Generic, TypeVar
 
 from urllib3._collections import RecentlyUsedContainer
 
@@ -112,7 +112,10 @@ class _Settings(TypedDict):
     stream: bool
     cert: _Cert | None
 
-class Session(SessionRedirectMixin):
+_VerifyType = TypeVar("_VerifyType", bound=_Verify)
+_CertType = TypeVar("_CertType", bound=_Cert)
+_ParamsType = TypeVar("_ParamsType", bound=_Params)
+class Session(SessionRedirectMixin, Generic[_VerifyType, _CertType, _ParamsType]):
     __attrs__: Any
     # See https://github.com/psf/requests/issues/5020#issuecomment-989082461:
     # requests sets this as a CaseInsensitiveDict, but users may set it to any MutableMapping
@@ -123,15 +126,16 @@ class Session(SessionRedirectMixin):
     #   - value is assumed to be a list (which it is by default)
     #   - a _Hook is assigned directly, without wrapping it in a list (also works)
     hooks: dict[str, list[_Hook] | Any]
-    params: _Params
+    params: _ParamsType
     stream: bool
-    verify: _Verify | None
-    cert: _Cert | None
+    verify: _VerifyType | None
+    cert: _CertType | None
     max_redirects: int
     trust_env: bool
     cookies: RequestsCookieJar
     adapters: MutableMapping[Any, Any]
     redirect_cache: RecentlyUsedContainer[Any, Any]
+    def __new__(cls) -> Session[bool, _CertType, dict[_ParamsMappingKeyType, _ParamsMappingValueType]]: ...
     def __init__(self) -> None: ...
     def __enter__(self) -> Self: ...
     def __exit__(self, *args: Unused) -> None: ...
